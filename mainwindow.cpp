@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     for(int i=0; i<DEV_COUNT; i++){
         firstMsgRecvdTime[i] = -1;
-        lastMsgRecvdTime[i] = -1;
+        //lastMsgRecvdTime[i] = -1;
     }
     timer.setInterval(100);
     timer.setSingleShot(false);
@@ -182,8 +182,8 @@ void MainWindow::handleReadyRead()
             if(firstMsgRecvdTime[num] == -1){
                 firstMsgRecvdTime[num] = curTime;
             }
-            lastMsgRecvdTime[num] = curTime;
-
+            //lastMsgRecvdTime[num] = curTime;
+            lastMsgRecvdTimer[num].start();
 
         }
     }
@@ -200,7 +200,7 @@ void MainWindow::timerHandler()
     int curTime = QTime::currentTime().msecsSinceStartOfDay();
     for(int i=0; i<DEV_COUNT; i++){
         if(firstMsgRecvdTime[i] != -1){
-            if((curTime -lastMsgRecvdTime[i]) > 500 ){
+            if((lastMsgRecvdTimer[i].elapsed()) > 1000 ){
                 qDebug() << "timeout";
                 firstMsgRecvdTime[i] = -1;
                 QPalette p = pte[i]->palette();
@@ -210,7 +210,7 @@ void MainWindow::timerHandler()
             }
             else{
                 if( (curTime - firstMsgRecvdTime[i]) > 2000){
-                    qDebug("long press");
+                    //qDebug("long press");
                     QPalette p = pte[i]->palette();
                     p.setColor(QPalette::Active, QPalette::Base, Qt::red);
                     p.setColor(QPalette::Inactive, QPalette::Base, Qt::red);

@@ -6,6 +6,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QPlainTextEdit>
+#include <QElapsedTimer>
 
 namespace Ui {
 class MainWindow;
@@ -17,7 +18,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-public:
+public:    
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
@@ -30,7 +31,8 @@ private:
     QTimer timer;
     QPlainTextEdit *pte[DEV_COUNT];
     int firstMsgRecvdTime[DEV_COUNT];
-    int lastMsgRecvdTime[DEV_COUNT];
+    //int lastMsgRecvdTime[DEV_COUNT];
+    QElapsedTimer lastMsgRecvdTimer[DEV_COUNT];
 
 private slots:    
     void on_pushButton_refreshCom_clicked();
