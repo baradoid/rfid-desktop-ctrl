@@ -33,12 +33,14 @@ private:
     int firstMsgRecvdTime[DEV_COUNT];
     //int lastMsgRecvdTime[DEV_COUNT];
     QElapsedTimer lastMsgRecvdTimer[DEV_COUNT];
+    void init();
 
 private slots:    
     void on_pushButton_refreshCom_clicked();
     void on_pushButtonComOpen_clicked();
     void handleReadyRead();
     void timerHandler();
+    void errorHandle(QSerialPort::SerialPortError);
 };
 
 #endif // MAINWINDOW_H

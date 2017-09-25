@@ -25,11 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     pte[6] = ui->plainTextEdit_7;
     on_pushButton_refreshCom_clicked();
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerHandler()));
-
-    for(int i=0; i<DEV_COUNT; i++){
-        firstMsgRecvdTime[i] = -1;
-        //lastMsgRecvdTime[i] = -1;
-    }
+    init();
     timer.setInterval(100);
     timer.setSingleShot(false);
     timer.start();
@@ -38,6 +34,16 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::init()
+{
+    for(int i=0; i<DEV_COUNT; i++){
+        firstMsgRecvdTime[i] = -1;
+        //lastMsgRecvdTime[i] = -1;
+        pte[i]->clear();
+        pte[i]->setEnabled(false);
+    }
 }
 
 void MainWindow::on_pushButton_refreshCom_clicked()
@@ -82,6 +88,9 @@ void MainWindow::on_pushButtonComOpen_clicked()
                  qDebug("%s port opened", qUtf8Printable(comName));
                  connect(&serial, SIGNAL(readyRead()),
                          this, SLOT(handleReadyRead()));
+                 connect(&serial, SIGNAL(errorOccurred(QSerialPort::SerialPortError)),
+                         this, SLOT(errorHandle(QSerialPort::SerialPortError)));
+
 //                 connect(&serial, SIGNAL(bytesWritten(qint64)),
 //                         this, SLOT(handleSerialDataWritten(qint64)));
                  ui->pushButtonComOpen->setText("close");
@@ -89,50 +98,48 @@ void MainWindow::on_pushButtonComOpen_clicked()
                  ui->statusBar->showMessage("connected", 2000);
                  recvdComPacks = 0;
                  startRecvTime = QTime::currentTime();
-
-
-                 //    QString comName("com9");
-                 //    serial.setBaudRate(115200);
-
-                 //    serial.setPortName(comName);
-                 //    if (!serial.open(QIODevice::ReadWrite)) {
-                 //        qDebug("%s port open FAIL", qUtf8Printable(comName));
-                 //       // return;
-                 //    }
-                 //    connect(&serial, SIGNAL(readyRead()),
-                 //            this, SLOT(readyRead()));
-
              }
          }
      }
      else{
          serial.close();
          //udpSocket->close();
-         qDebug("port closed");
+         //qDebug("port closed");
          ui->pushButtonComOpen->setText("open");
          //contrStringQueue.clear();
          ui->statusBar->showMessage("disconnected", 2000);
+         init();
      }
 }
 
 
+void MainWindow::errorHandle(QSerialPort::SerialPortError spe)
+{
+    if((spe == QSerialPort::PermissionError) ||
+       (spe == QSerialPort::FramingError)){
+        serial.close();
+        ui->pushButtonComOpen->setText("open");
+        ui->statusBar->showMessage("QSerialPort::PermissionError", 2000);
+        init();
+
+    }
+
+}
+
 void MainWindow::handleReadyRead()
 {
-
-
-
     QByteArray ba = serial.readAll();
     ui->statusBar->showMessage(QString("recvd %1 bytes").arg(ba.length()), 2000);
     QString str(ba);
     QStringList strL = str.split(":");
-    qDebug() << ba.length() <<  qPrintable(ba);
+    //qDebug() << ba.length() <<  qPrintable(ba);
     if(ba.length() == 25){
         QString str(ba);
         QStringList strL = str.split(":");
 
         bool bOk;
         int num = strL[0].toInt(&bOk, 16);
-        qDebug() << qPrintable(strL[0]) << strL[0].toInt(&bOk, 16);
+        //qDebug() << qPrintable(strL[0]) << strL[0].toInt(&bOk, 16);
 //        switch (num) {
 //        case 8:
 //            ui->checkBox_1->setChecked(true);
@@ -201,7 +208,7 @@ void MainWindow::timerHandler()
     for(int i=0; i<DEV_COUNT; i++){
         if(firstMsgRecvdTime[i] != -1){
             if((lastMsgRecvdTimer[i].elapsed()) > 1000 ){
-                qDebug() << "timeout";
+                //qDebug() << "timeout";
                 firstMsgRecvdTime[i] = -1;
                 QPalette p = pte[i]->palette();
                 p.setColor(QPalette::Active, QPalette::Base, Qt::white);
